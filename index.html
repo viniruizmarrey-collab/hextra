@@ -1,0 +1,1938 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Planilha Inteligente - Controle Financeiro & Horas</title>
+    <!-- Tailwind CSS para Estilização Moderna -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Fonte Inter para melhor legibilidade -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- Font Awesome para Ícones -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #0b0f19; /* Fundo escuro premium */
+            color: #f3f4f6;
+        }
+        /* Custom scrollbar para tabelas responsivas */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #111827;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #374151;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #4b5563;
+        }
+        /* Efeitos visuais e brilhos premium */
+        .btn-glow {
+            box-shadow: 0 0 15px rgba(99, 102, 241, 0.4);
+            transition: all 0.3s ease;
+        }
+        .btn-glow:hover {
+            box-shadow: 0 0 25px rgba(99, 102, 241, 0.7);
+            transform: translateY(-1px);
+        }
+        .btn-glow-emerald {
+            box-shadow: 0 0 15px rgba(16, 185, 129, 0.3);
+            transition: all 0.3s ease;
+        }
+        .btn-glow-emerald:hover {
+            box-shadow: 0 0 25px rgba(16, 185, 129, 0.6);
+            transform: translateY(-1px);
+        }
+        /* Destaque para horas de entrada/saída */
+        .time-badge {
+            background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+            border: 1px solid #38bdf8;
+        }
+    </style>
+</head>
+<body class="min-h-screen pb-12">
+
+    <header class="border-b border-gray-800 bg-[#0f172a] py-5 px-4 sticky top-0 z-40 shadow-md">
+        <div class="max-w-7xl mx-auto flex flex-col sm:flex-row justify-between items-center gap-4">
+            <div class="flex items-center gap-3">
+                <div class="bg-indigo-950/40 p-3 rounded-xl border border-indigo-500/30 flex items-center justify-center">
+                    <i class="fa-solid fa-wallet text-indigo-400 text-xl"></i>
+                </div>
+                <div>
+                    <h1 class="text-xl font-bold tracking-tight text-white flex items-center gap-2">
+                        Planilha de Despesas & Horas <span class="text-xs bg-indigo-500/20 text-indigo-400 font-semibold px-2 py-0.5 rounded-full border border-indigo-500/30">Versão 3.7</span>
+                    </h1>
+                    <p class="text-xs text-gray-400 font-medium">Controle contas, acompanhe expedientes editáveis, poupanças de metas e relatórios</p>
+                </div>
+            </div>
+            
+            <div class="flex flex-wrap gap-2">
+                <button onclick="openNewExpenseModal()" class="bg-indigo-600 hover:bg-indigo-500 text-white font-semibold text-sm px-4 py-2.5 rounded-xl flex items-center gap-2 btn-glow transition-all">
+                    <i class="fa-solid fa-plus text-xs"></i> Novo Gasto
+                </button>
+                <button onclick="openNewIncomeModal()" class="bg-emerald-600 hover:bg-emerald-500 text-white font-semibold text-sm px-4 py-2.5 rounded-xl flex items-center gap-2 btn-glow-emerald transition-all">
+                    <i class="fa-solid fa-money-bill-trend-up text-xs"></i> Ganho Avulso
+                </button>
+                <button onclick="openWorkLogModal()" class="bg-sky-600 hover:bg-sky-500 text-white font-semibold text-sm px-4 py-2.5 rounded-xl flex items-center gap-2 shadow-lg transition-all">
+                    <i class="fa-solid fa-clock text-xs"></i> Registrar Horas
+                </button>
+                <button onclick="exportData()" class="bg-gray-800 hover:bg-gray-700 text-gray-300 font-medium text-sm px-3 py-2.5 rounded-xl flex items-center gap-2 border border-gray-700 transition-all" title="Exportar dados">
+                    <i class="fa-solid fa-download"></i>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <main class="max-w-7xl mx-auto px-4 mt-8">
+        
+        <section class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+            <!-- Card Ganhos Totais (Horas + Ganhos Extras) -->
+            <div class="bg-[#111827] border border-gray-800 rounded-2xl p-5 hover:border-emerald-500/30 transition-all flex items-center justify-between">
+                <div>
+                    <p class="text-xs font-medium text-gray-400 uppercase tracking-wider">Total a Receber</p>
+                    <h3 id="stat-income" class="text-2xl font-bold text-emerald-400 mt-1">R$ 0,00</h3>
+                    <p class="text-[10px] text-gray-500 mt-1 font-medium" id="stat-income-details">Horas: R$ 0,00 | Fixos: R$ 0,00</p>
+                </div>
+                <div class="bg-emerald-950/30 border border-emerald-500/20 p-3.5 rounded-xl text-emerald-400">
+                    <i class="fa-solid fa-arrow-trend-up text-xl"></i>
+                </div>
+            </div>
+
+            <!-- Card Total Despesas -->
+            <div class="bg-[#111827] border border-gray-800 rounded-2xl p-5 hover:border-red-500/30 transition-all flex items-center justify-between">
+                <div>
+                    <p class="text-xs font-medium text-gray-400 uppercase tracking-wider">Despesas Totais</p>
+                    <h3 id="stat-expenses" class="text-2xl font-bold text-red-400 mt-1">R$ 0,00</h3>
+                    <p class="text-[10px] text-gray-500 mt-1 font-medium" id="stat-expenses-paid">R$ 0,00 pagos até agora</p>
+                </div>
+                <div class="bg-red-950/30 border border-red-500/20 p-3.5 rounded-xl text-red-400">
+                    <i class="fa-solid fa-arrow-trend-down text-xl"></i>
+                </div>
+            </div>
+
+            <!-- Card Saldo Disponível -->
+            <div class="bg-[#111827] border border-gray-800 rounded-2xl p-5 hover:border-indigo-500/30 transition-all flex items-center justify-between">
+                <div>
+                    <p class="text-xs font-medium text-gray-400 uppercase tracking-wider">Saldo Estimado</p>
+                    <h3 id="stat-balance" class="text-2xl font-bold text-indigo-300 mt-1">R$ 0,00</h3>
+                    <p class="text-[10px] text-gray-500 mt-1 font-medium">Ganhos totais menos despesas</p>
+                </div>
+                <div class="bg-indigo-950/30 border border-indigo-500/20 p-3.5 rounded-xl text-indigo-400">
+                    <i class="fa-solid fa-scale-balanced text-xl"></i>
+                </div>
+            </div>
+
+            <!-- Card Destaque: Horas Trabalhadas com visualização gigante -->
+            <div class="bg-[#111827] border border-sky-500/30 rounded-2xl p-5 flex flex-col justify-between relative overflow-hidden">
+                <div class="absolute right-0 top-0 translate-x-3 -translate-y-3 opacity-10">
+                    <i class="fa-solid fa-clock text-9xl text-sky-400"></i>
+                </div>
+                <div class="flex items-center justify-between z-10">
+                    <div>
+                        <p class="text-xs font-bold text-sky-400 uppercase tracking-wider">Horas Trabalhadas</p>
+                        <h3 id="stat-total-hours" class="text-3xl font-extrabold text-white mt-1">0h 00m</h3>
+                    </div>
+                    <div class="bg-sky-950/40 border border-sky-500/30 p-2.5 rounded-xl text-sky-400">
+                        <i class="fa-solid fa-clock-rotate-left text-lg animate-pulse"></i>
+                    </div>
+                </div>
+                <div class="mt-3 text-[11px] text-gray-400 z-10 font-medium">
+                    Valor da sua Hora: <span id="stat-hourly-rate-badge" class="font-bold text-sky-300 bg-sky-950/40 px-1.5 py-0.5 rounded border border-sky-500/20">R$ 50,00</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- Filtros e Dicas -->
+        <div class="bg-[#111827] border border-gray-800 rounded-2xl p-4 mb-6 flex flex-col md:flex-row justify-between items-center gap-4">
+            <div class="flex items-center gap-2 overflow-x-auto w-full md:w-auto pb-2 md:pb-0" id="category-filters">
+                <!-- Inserido dinamicamente via JS -->
+            </div>
+            
+            <div class="flex items-center gap-2 w-full md:w-auto justify-end">
+                <span class="text-xs text-indigo-400 font-medium"><i class="fa-solid fa-circle-info mr-1"></i> Dica: Clique nas despesas para ver datas individuais de parcelas!</span>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+            
+            <!-- Coluna Esquerda: Suas Despesas -->
+            <div class="lg:col-span-8 bg-[#111827] border border-gray-800 rounded-2xl shadow-xl overflow-hidden">
+                <div class="p-5 border-b border-gray-800 flex justify-between items-center bg-[#151b29]">
+                    <div class="flex items-center gap-2">
+                        <span class="w-2.5 h-2.5 rounded-full bg-indigo-500 animate-pulse"></span>
+                        <h2 class="font-bold text-white text-lg">Suas Despesas &amp; Parcelamentos</h2>
+                    </div>
+                    <span id="expense-count" class="text-xs bg-gray-800 text-gray-300 px-3 py-1 rounded-full font-bold border border-gray-700">0 Cadastradas</span>
+                </div>
+
+                <!-- Tabela de Despesas Principal (COLUNA CATEGORIA REMOVIDA) -->
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <tr class="border-b border-gray-800 bg-[#0d121f] text-gray-400 text-xs font-semibold tracking-wider uppercase">
+                                <th class="py-4 px-5">Gasto / Descrição</th>
+                                <th class="py-4 px-5 text-center">Parcelas Pagas</th>
+                                <th class="py-4 px-5 text-right">Valor (Total e Parcela)</th>
+                                <th class="py-4 px-5 text-center">Próx. Vencimento</th>
+                                <th class="py-4 px-5 text-center">Status Geral</th>
+                                <th class="py-4 px-5 text-center">Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody id="expense-table-body" class="divide-y divide-gray-800/60">
+                            <!-- Inserido dinamicamente via JS -->
+                        </tbody>
+                    </table>
+                </div>
+                
+                <!-- Estado Vazio para as Despesas -->
+                <div id="expense-empty" class="hidden p-12 text-center flex flex-col items-center justify-center">
+                    <div class="w-16 h-16 bg-gray-800/50 text-gray-500 rounded-full flex items-center justify-center mb-4 border border-gray-700/50">
+                        <i class="fa-solid fa-file-invoice-dollar text-2xl"></i>
+                    </div>
+                    <h3 class="text-gray-300 font-bold text-base">Nenhuma despesa adicionada</h3>
+                    <p class="text-gray-500 text-xs mt-1 max-w-sm">Adicione suas contas mensais e despesas clicando em "+ Novo Gasto" no topo.</p>
+                </div>
+            </div>
+
+            <!-- Coluna Direita: Poupanças, Valor da Hora, Horas e Renda Extra -->
+            <div class="lg:col-span-4 flex flex-col gap-6">
+                
+                <!-- ÁREA DE POUPANÇA DESTINADA A CASA E VIAGEM (SOLICITADA PELO USUÁRIO) -->
+                <div class="bg-[#111827] border border-gray-800 rounded-2xl p-5 shadow-xl">
+                    <h3 class="text-sm font-bold text-white mb-4 flex items-center gap-2">
+                        <i class="fa-solid fa-piggy-bank text-pink-400"></i> Minhas Poupanças &amp; Metas
+                    </h3>
+                    
+                    <div class="space-y-4">
+                        <!-- Poupança Casa -->
+                        <div class="bg-[#182030] p-4 rounded-xl border border-gray-800">
+                            <div class="flex justify-between items-center mb-2">
+                                <span class="text-xs font-bold text-white flex items-center gap-1.5">
+                                    <i class="fa-solid fa-house text-indigo-400"></i> Sonho da Casa Própria
+                                </span>
+                                <span id="savings-casa-percent" class="text-[11px] font-extrabold text-indigo-400">0%</span>
+                            </div>
+                            <div class="w-full bg-gray-800 rounded-full h-2.5 mb-2.5">
+                                <div id="savings-casa-bar" class="bg-indigo-500 h-2.5 rounded-full transition-all duration-500" style="width: 0%"></div>
+                            </div>
+                            <div class="flex justify-between items-center text-[11px] text-gray-400 mb-3">
+                                <span>Guardado: <strong id="savings-casa-current" class="text-white">R$ 0,00</strong></span>
+                                <span>Meta: <span id="savings-casa-target">R$ 50.000,00</span></span>
+                            </div>
+                            <div class="grid grid-cols-2 gap-2">
+                                <button onclick="openSavingsTxModal('casa', 'add')" class="bg-indigo-600/20 hover:bg-indigo-600/30 border border-indigo-500/30 text-indigo-300 font-bold text-[10px] uppercase tracking-wide py-1.5 rounded-lg transition-all">
+                                    + Guardar
+                                </button>
+                                <button onclick="openSavingsTxModal('casa', 'remove')" class="bg-gray-800 hover:bg-gray-700 text-gray-400 font-bold text-[10px] uppercase tracking-wide py-1.5 rounded-lg transition-all">
+                                    - Retirar
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Poupança Viagem -->
+                        <div class="bg-[#182030] p-4 rounded-xl border border-gray-800">
+                            <div class="flex justify-between items-center mb-2">
+                                <span class="text-xs font-bold text-white flex items-center gap-1.5">
+                                    <i class="fa-solid fa-plane text-emerald-400"></i> Meta de Viagem
+                                </span>
+                                <span id="savings-viagem-percent" class="text-[11px] font-extrabold text-emerald-400">0%</span>
+                            </div>
+                            <div class="w-full bg-gray-800 rounded-full h-2.5 mb-2.5">
+                                <div id="savings-viagem-bar" class="bg-emerald-500 h-2.5 rounded-full transition-all duration-500" style="width: 0%"></div>
+                            </div>
+                            <div class="flex justify-between items-center text-[11px] text-gray-400 mb-3">
+                                <span>Guardado: <strong id="savings-viagem-current" class="text-white">R$ 0,00</strong></span>
+                                <span>Meta: <span id="savings-viagem-target">R$ 10.000,00</span></span>
+                            </div>
+                            <div class="grid grid-cols-2 gap-2">
+                                <button onclick="openSavingsTxModal('viagem', 'add')" class="bg-emerald-600/20 hover:bg-emerald-600/30 border border-emerald-500/30 text-emerald-300 font-bold text-[10px] uppercase tracking-wide py-1.5 rounded-lg transition-all">
+                                    + Guardar
+                                </button>
+                                <button onclick="openSavingsTxModal('viagem', 'remove')" class="bg-gray-800 hover:bg-gray-700 text-gray-400 font-bold text-[10px] uppercase tracking-wide py-1.5 rounded-lg transition-all">
+                                    - Retirar
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Card de Configuração de Valor de Hora -->
+                <div class="bg-[#111827] border border-gray-800 rounded-2xl p-5 shadow-xl">
+                    <h3 class="text-sm font-bold text-white mb-3 flex items-center gap-2">
+                        <i class="fa-solid fa-sliders text-sky-400"></i> Configuração do seu Trabalho
+                    </h3>
+                    <div class="flex items-center gap-3">
+                        <div class="flex-1">
+                            <label class="block text-[10px] text-gray-400 uppercase font-bold mb-1">Valor Padrão da Hora (R$)</label>
+                            <input type="number" id="global-hourly-rate" min="0" step="0.01" value="50.00" onchange="updateHourlyRateSetting()" class="w-full bg-[#1e293b] border border-gray-700 rounded-xl px-3 py-2 text-sm text-white font-bold focus:outline-none focus:border-sky-500">
+                        </div>
+                        <button onclick="updateHourlyRateSetting()" class="mt-5 bg-sky-600 hover:bg-sky-500 text-white p-2.5 rounded-xl transition-all" title="Salvar taxa horária">
+                            <i class="fa-solid fa-floppy-disk text-sm"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Painel de Abas Lateral (Horas & Ganhos) -->
+                <div class="bg-[#111827] border border-gray-800 rounded-2xl shadow-xl overflow-hidden flex flex-col flex-1">
+                    <div class="border-b border-gray-800 bg-[#151b29] flex">
+                        <button onclick="switchTab('tab-hours')" id="btn-tab-hours" class="flex-1 py-3 text-center text-xs font-bold text-white border-b-2 border-sky-500 transition-all">
+                            <i class="fa-solid fa-clock mr-1.5 text-sky-400"></i> Horas Trabalhadas
+                        </button>
+                        <button onclick="switchTab('tab-gains')" id="btn-tab-gains" class="flex-1 py-3 text-center text-xs font-bold text-gray-400 border-b-2 border-transparent hover:text-white transition-all">
+                            <i class="fa-solid fa-money-bill-wave mr-1.5 text-emerald-400"></i> Ganhos Avulsos
+                        </button>
+                    </div>
+
+                    <!-- Conteúdo: Horas Trabalhadas -->
+                    <div id="content-tab-hours" class="p-4 flex-1 flex flex-col min-h-[300px]">
+                        
+                        <!-- Mini painel de resumo de horas dentro da aba -->
+                        <div class="bg-sky-950/20 border border-sky-500/20 p-3.5 rounded-xl mb-4 flex justify-between items-center">
+                            <div>
+                                <p class="text-[10px] uppercase font-bold text-sky-400">Progresso do Período</p>
+                                <p class="text-xs font-medium text-gray-300 mt-0.5">Soma de todo o histórico</p>
+                            </div>
+                            <div class="text-right">
+                                <h4 id="sidebar-total-hours" class="text-base font-extrabold text-white">0h 00m</h4>
+                                <span id="sidebar-total-earned" class="text-[10px] text-sky-400 font-bold">R$ 0,00</span>
+                            </div>
+                        </div>
+
+                        <!-- Seção de Ações com "Ver Relatório" -->
+                        <div class="flex justify-between items-center mb-3">
+                            <span class="text-[10px] text-gray-400 font-bold uppercase tracking-wider">Folha de Ponto</span>
+                            <div class="flex items-center gap-2">
+                                <button onclick="openReportModal()" class="text-xs text-sky-400 hover:text-sky-300 font-bold flex items-center gap-1 bg-sky-950/40 px-2.5 py-1 rounded-lg border border-sky-500/20 transition-all">
+                                    <i class="fa-solid fa-chart-line text-[10px]"></i> Ver Relatório
+                                </button>
+                                <button onclick="openWorkLogModal()" class="text-xs text-emerald-400 hover:text-emerald-300 font-bold flex items-center gap-1 bg-emerald-950/40 px-2.5 py-1 rounded-lg border border-emerald-500/20 transition-all">
+                                    <i class="fa-solid fa-plus text-[10px]"></i> Registrar Horas
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <!-- Lista de Registros de Horas -->
+                        <div id="work-log-list" class="space-y-3 overflow-y-auto max-h-[380px] flex-1 pr-1">
+                            <!-- Inserido dinamicamente via JS -->
+                        </div>
+
+                        <!-- Estado Vazio Horas -->
+                        <div id="work-log-empty" class="hidden p-6 text-center flex flex-col items-center justify-center flex-1">
+                            <div class="w-12 h-12 bg-gray-800/50 text-gray-500 rounded-full flex items-center justify-center mb-2 border border-gray-700/50">
+                                <i class="fa-regular fa-clock text-lg"></i>
+                            </div>
+                            <h4 class="text-gray-300 font-bold text-xs">Nenhum registro de horas</h4>
+                            <p class="text-gray-500 text-[11px] mt-1">Insira suas horas trabalhadas informando a entrada e saída.</p>
+                        </div>
+                    </div>
+
+                    <!-- Conteúdo: Ganhos Avulsos -->
+                    <div id="content-tab-gains" class="p-4 flex-1 flex flex-col min-h-[300px] hidden">
+                        <div class="flex justify-between items-center mb-3">
+                            <span class="text-[10px] text-gray-400 font-bold uppercase tracking-wider">Fontes de Renda Extra</span>
+                            <button onclick="openNewIncomeModal()" class="text-xs text-emerald-400 hover:text-emerald-300 font-bold flex items-center gap-1 bg-emerald-950/40 px-2.5 py-1 rounded-lg border border-emerald-500/20 transition-all">
+                                <i class="fa-solid fa-plus text-[10px]"></i> Novo Ganho
+                            </button>
+                        </div>
+
+                        <!-- Lista de Ganhos Extras -->
+                        <div id="income-list" class="space-y-3 overflow-y-auto max-h-[420px] flex-1 pr-1">
+                            <!-- Inserido dinamicamente via JS -->
+                        </div>
+
+                        <!-- Estado Vazio Ganhos -->
+                        <div id="income-empty" class="hidden p-6 text-center flex flex-col items-center justify-center flex-1">
+                            <div class="w-12 h-12 bg-gray-800/50 text-gray-500 rounded-full flex items-center justify-center mb-2 border border-gray-700/50">
+                                <i class="fa-solid fa-money-bill-trend-up text-lg"></i>
+                            </div>
+                            <h4 class="text-gray-300 font-bold text-xs">Nenhum ganho registrado</h4>
+                            <p class="text-gray-500 text-[11px] mt-1">Insira freelances, vendas ou bônus extras clicando em "+ Novo Ganho".</p>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </main>
+
+    <!-- Modal Novo Gasto (Opções de Categoria Simplificadas: Casa, Viagem, Poupança, Geral, Outros) -->
+    <div id="expenseModal" class="fixed inset-0 bg-black/85 z-50 flex items-center justify-center p-4 hidden transition-all duration-300">
+        <div class="bg-[#111827] border border-gray-800 rounded-2xl w-full max-w-lg shadow-2xl overflow-hidden">
+            <div class="p-5 border-b border-gray-800 flex justify-between items-center bg-[#151b29]">
+                <h3 id="expense-modal-title" class="text-lg font-bold text-white flex items-center gap-2">
+                    <i class="fa-solid fa-file-invoice text-indigo-400"></i> Adicionar Nova Despesa
+                </h3>
+                <button onclick="closeModal('expenseModal')" class="text-gray-400 hover:text-white transition-all">
+                    <i class="fa-solid fa-xmark text-lg"></i>
+                </button>
+            </div>
+            
+            <form id="expenseForm" onsubmit="saveExpense(event)" class="p-6 space-y-4">
+                <!-- Tipo de Pagamento (À Vista ou Parcelado) -->
+                <div>
+                    <label class="block text-xs font-semibold text-gray-400 uppercase mb-1.5">Tipo de Pagamento</label>
+                    <div class="grid grid-cols-2 gap-3">
+                        <button type="button" id="pay-type-vista" onclick="setPaymentType('vista')" class="py-2.5 rounded-xl text-sm font-semibold border transition-all bg-indigo-600/20 text-indigo-400 border-indigo-500/40">À Vista</button>
+                        <button type="button" id="pay-type-parcelado" onclick="setPaymentType('parcelado')" class="py-2.5 rounded-xl text-sm font-semibold border border-gray-700 text-gray-400 hover:text-white transition-all">Parcelado</button>
+                    </div>
+                    <input type="hidden" id="exp-payment-type" value="vista">
+                </div>
+
+                <div>
+                    <label class="block text-xs font-semibold text-gray-400 uppercase mb-1.5">Descrição / Nome do Gasto</label>
+                    <input type="text" id="exp-desc" required placeholder="Ex: Aluguel, Passagem, Depósito Poupança" class="w-full bg-[#1e293b] border border-gray-700 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-indigo-500 transition-all">
+                </div>
+
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-400 uppercase mb-1.5">Categoria</label>
+                        <!-- CATEGORIAS SIMPLIFICADAS RECONFIGURADAS CONFORME PEDIDO -->
+                        <select id="exp-category" required class="w-full bg-[#1e293b] border border-gray-700 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-indigo-500 transition-all">
+                            <option value="Casa">Casa</option>
+                            <option value="Viagem">Viagem</option>
+                            <option value="Poupança">Poupança</option>
+                            <option value="Geral">Geral</option>
+                            <option value="Outros">Outros</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-400 uppercase mb-1.5">Valor Total (R$)</label>
+                        <input type="number" step="0.01" id="exp-value" required placeholder="Ex: 1200.00" class="w-full bg-[#1e293b] border border-gray-700 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-indigo-500 transition-all">
+                    </div>
+                </div>
+
+                <!-- Campos de Parcelas -->
+                <div id="installments-fields-container" class="grid grid-cols-2 gap-4 hidden">
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-400 uppercase mb-1.5">Quant. Parcelas</label>
+                        <input type="number" id="exp-installments" min="1" max="120" value="1" required class="w-full bg-[#1e293b] border border-gray-700 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-indigo-500 transition-all">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-400 uppercase mb-1.5">Parcelas já Pagas</label>
+                        <input type="number" id="exp-paid-count" min="0" value="0" required class="w-full bg-[#1e293b] border border-gray-700 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-indigo-500 transition-all">
+                    </div>
+                </div>
+
+                <!-- Painel Simplificado para Pagamento À Vista -->
+                <div id="vista-fields-container" class="bg-[#182030] border border-gray-800 p-4 rounded-xl flex items-center justify-between">
+                    <div>
+                        <span class="text-xs font-bold text-white block">Pagamento Confirmado?</span>
+                        <span class="text-[10px] text-gray-400 block mt-0.5">Marque caso este gasto já tenha sido pago.</span>
+                    </div>
+                    <label class="relative inline-flex items-center cursor-pointer">
+                        <input type="checkbox" id="exp-paid-vista" class="sr-only peer">
+                        <div class="w-11 h-6 bg-gray-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-indigo-600"></div>
+                    </label>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-semibold text-gray-400 uppercase mb-1.5">Data de Vencimento</label>
+                    <input type="date" id="exp-first-date" required class="w-full bg-[#1e293b] border border-gray-700 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-indigo-500 transition-all">
+                </div>
+
+                <div class="pt-4 border-t border-gray-800 flex justify-end gap-3">
+                    <button type="button" onclick="closeModal('expenseModal')" class="bg-gray-800 hover:bg-gray-700 text-gray-300 font-medium text-sm px-4 py-2.5 rounded-xl transition-all">Cancelar</button>
+                    <button type="submit" id="expense-submit-btn" class="bg-indigo-600 hover:bg-indigo-500 text-white font-semibold text-sm px-5 py-2.5 rounded-xl btn-glow transition-all">Salvar Gasto</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal de Registro de Ponto / Horas Trabalhadas (AGORA TOTALMENTE EDITÁVEL!) -->
+    <div id="workLogModal" class="fixed inset-0 bg-black/85 z-50 flex items-center justify-center p-4 hidden transition-all duration-300">
+        <div class="bg-[#111827] border border-gray-800 rounded-2xl w-full max-w-md shadow-2xl overflow-hidden">
+            <div class="p-5 border-b border-gray-800 flex justify-between items-center bg-[#151b29]">
+                <h3 id="worklog-modal-title" class="text-lg font-bold text-white flex items-center gap-2">
+                    <i class="fa-solid fa-clock text-sky-400"></i> Registrar Horas de Trabalho
+                </h3>
+                <button onclick="closeModal('workLogModal')" class="text-gray-400 hover:text-white transition-all">
+                    <i class="fa-solid fa-xmark text-lg"></i>
+                </button>
+            </div>
+            
+            <form id="workLogForm" onsubmit="saveWorkLog(event)" class="p-6 space-y-4">
+                <div>
+                    <label class="block text-xs font-semibold text-gray-400 uppercase mb-1.5">Data do Expediente</label>
+                    <input type="date" id="work-date" required class="w-full bg-[#1e293b] border border-gray-700 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-sky-500 transition-all">
+                </div>
+
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-400 uppercase mb-1.5">Hora de Entrada</label>
+                        <input type="time" id="work-start" required class="w-full bg-[#1e293b] border border-gray-700 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-sky-500 transition-all">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-400 uppercase mb-1.5">Hora de Saída</label>
+                        <input type="time" id="work-end" required class="w-full bg-[#1e293b] border border-gray-700 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-sky-500 transition-all">
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-semibold text-gray-400 uppercase mb-1.5">Nome / Observação da Tarefa</label>
+                    <input type="text" id="work-note" placeholder="Ex: Projeto Freelance, Suporte TI, Desenvolvimento" class="w-full bg-[#1e293b] border border-gray-700 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-sky-500 transition-all">
+                </div>
+
+                <div class="pt-4 border-t border-gray-800 flex justify-end gap-3">
+                    <button type="button" onclick="closeModal('workLogModal')" class="bg-gray-800 hover:bg-gray-700 text-gray-300 font-medium text-sm px-4 py-2.5 rounded-xl transition-all">Cancelar</button>
+                    <button type="submit" id="worklog-submit-btn" class="bg-sky-600 hover:bg-sky-500 text-white font-semibold text-sm px-5 py-2.5 rounded-xl transition-all">Salvar Registro</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal Ganhos Avulsos -->
+    <div id="incomeModal" class="fixed inset-0 bg-black/85 z-50 flex items-center justify-center p-4 hidden transition-all duration-300">
+        <div class="bg-[#111827] border border-gray-800 rounded-2xl w-full max-w-lg shadow-2xl overflow-hidden">
+            <div class="p-5 border-b border-gray-800 flex justify-between items-center bg-[#151b29]">
+                <h3 id="income-modal-title" class="text-lg font-bold text-white flex items-center gap-2">
+                    <i class="fa-solid fa-money-bill-wave text-emerald-400"></i> Adicionar Ganho Avulso
+                </h3>
+                <button onclick="closeModal('incomeModal')" class="text-gray-400 hover:text-white transition-all">
+                    <i class="fa-solid fa-xmark text-lg"></i>
+                </button>
+            </div>
+            
+            <form id="incomeForm" onsubmit="saveIncome(event)" class="p-6 space-y-4">
+                <div>
+                    <label class="block text-xs font-semibold text-gray-400 uppercase mb-1.5">Descrição do Ganho</label>
+                    <input type="text" id="inc-desc" required placeholder="Ex: Venda de Computador, Comissão de Vendas" class="w-full bg-[#1e293b] border border-gray-700 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-emerald-500 transition-all">
+                </div>
+
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-400 uppercase mb-1.5">Origem / Canal</label>
+                        <input type="text" id="inc-source" placeholder="Ex: Cliente, Venda Direta" class="w-full bg-[#1e293b] border border-gray-700 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-emerald-500 transition-all">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-400 uppercase mb-1.5">Valor do Ganho (R$)</label>
+                        <input type="number" step="0.01" id="inc-value" required placeholder="Ex: 500.00" class="w-full bg-[#1e293b] border border-gray-700 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-emerald-500 transition-all">
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-400 uppercase mb-1.5">Data do Ganho</label>
+                        <input type="date" id="inc-date" required class="w-full bg-[#1e293b] border border-gray-700 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-emerald-500 transition-all">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-400 uppercase mb-1.5">Estado</label>
+                        <select id="inc-status" class="w-full bg-[#1e293b] border border-gray-700 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-emerald-500 transition-all">
+                            <option value="received">Recebido</option>
+                            <option value="pending">Pendente (A receber)</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="pt-4 border-t border-gray-800 flex justify-end gap-3">
+                    <button type="button" onclick="closeModal('incomeModal')" class="bg-gray-800 hover:bg-gray-700 text-gray-300 font-medium text-sm px-4 py-2.5 rounded-xl transition-all">Cancelar</button>
+                    <button type="submit" id="income-submit-btn" class="bg-emerald-600 hover:bg-emerald-500 text-white font-semibold text-sm px-5 py-2.5 rounded-xl shadow-lg transition-all">Salvar Ganho</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal de Relatório de Horas Avançado (VALOR GERADO REMOVIDO DA TABELA, HORÁRIOS PERFEITAMENTE ALINHADOS & EDITÁVEIS!) -->
+    <div id="reportModal" class="fixed inset-0 bg-black/90 z-50 flex items-center justify-center p-4 hidden transition-all duration-300">
+        <div class="bg-[#0f172a] border border-gray-800 rounded-2xl w-full max-w-4xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
+            <!-- Cabeçalho do Relatório -->
+            <div class="p-6 border-b border-gray-800 bg-[#151b29] flex justify-between items-center">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 bg-sky-950/50 text-sky-400 border border-sky-500/30 rounded-xl flex items-center justify-center">
+                        <i class="fa-solid fa-chart-line text-lg"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-lg font-extrabold text-white">Relatório Geral de Horas e Produtividade</h3>
+                        <p class="text-xs text-gray-400">Análise simplificada de expedientes, horários de entrada/saída e valores gerados acumulados</p>
+                    </div>
+                </div>
+                <button onclick="closeModal('reportModal')" class="text-gray-400 hover:text-white bg-gray-800 hover:bg-gray-700 p-2 rounded-lg transition-all">
+                    <i class="fa-solid fa-xmark text-lg"></i>
+                </button>
+            </div>
+
+            <!-- Corpo de Indicadores Rápidos -->
+            <div class="p-6 overflow-y-auto flex-1 space-y-6">
+                <div class="grid grid-cols-1 sm:grid-cols-4 gap-4">
+                    <div class="bg-gray-900/60 border border-gray-800/80 p-4 rounded-xl text-center">
+                        <p class="text-[10px] text-gray-400 font-bold uppercase tracking-wider">Horas Acumuladas</p>
+                        <h4 id="rep-stat-hours" class="text-2xl font-black text-sky-400 mt-1">0h 00m</h4>
+                    </div>
+                    <div class="bg-gray-900/60 border border-gray-800/80 p-4 rounded-xl text-center">
+                        <p class="text-[10px] text-gray-400 font-bold uppercase tracking-wider">Receitas Estimadas</p>
+                        <h4 id="rep-stat-earned" class="text-2xl font-black text-emerald-400 mt-1">R$ 0,00</h4>
+                    </div>
+                    <div class="bg-gray-900/60 border border-gray-800/80 p-4 rounded-xl text-center">
+                        <p class="text-[10px] text-gray-400 font-bold uppercase tracking-wider">Média Diária</p>
+                        <h4 id="rep-stat-avg" class="text-2xl font-black text-indigo-400 mt-1">0h 00m</h4>
+                    </div>
+                    <div class="bg-gray-900/60 border border-gray-800/80 p-4 rounded-xl text-center">
+                        <p class="text-[10px] text-gray-400 font-bold uppercase tracking-wider">Preço da Sua Hora</p>
+                        <h4 id="rep-stat-rate" class="text-2xl font-black text-white mt-1">R$ 0,00</h4>
+                    </div>
+                </div>
+
+                <!-- Lista de Registros Completa dentro do Relatório (SEM COLUNA DE VALOR GERADO REDUNDANTE) -->
+                <div class="bg-gray-900/40 border border-gray-800 rounded-xl overflow-hidden">
+                    <div class="p-4 border-b border-gray-800 bg-[#121926] flex justify-between items-center">
+                        <h4 class="text-xs font-bold text-gray-300 uppercase tracking-wider">Histórico de Expedientes</h4>
+                        <span id="rep-total-days" class="text-[10px] bg-gray-800 text-gray-400 px-2 py-0.5 rounded border border-gray-700 font-bold">0 Dias Registrados</span>
+                    </div>
+                    
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left border-collapse text-xs">
+                            <thead>
+                                <tr class="bg-gray-900 border-b border-gray-800 text-gray-400 font-semibold tracking-wider uppercase">
+                                    <th class="p-4">Data do Trabalho</th>
+                                    <th class="p-4 text-center">Entrada ➔ Saída</th>
+                                    <th class="p-4 text-center">Duração Eficaz</th>
+                                    <th class="p-4 text-center">Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody id="report-table-body" class="divide-y divide-gray-800">
+                                <!-- Inserido via JS -->
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    <div id="report-empty-state" class="hidden p-10 text-center">
+                        <i class="fa-regular fa-clock text-gray-600 text-3xl mb-2"></i>
+                        <p class="text-gray-400 text-xs font-semibold">Nenhum dia de trabalho registrado para exibir relatório.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Rodapé do Relatório -->
+            <div class="p-5 border-t border-gray-800 bg-gray-950/60 flex justify-end gap-3">
+                <button onclick="window.print()" class="bg-gray-800 hover:bg-gray-700 text-gray-300 font-medium text-xs px-4 py-2 rounded-lg flex items-center gap-2 border border-gray-700 transition-all">
+                    <i class="fa-solid fa-print"></i> Imprimir Relatório
+                </button>
+                <button onclick="closeModal('reportModal')" class="bg-indigo-600 hover:bg-indigo-500 text-white font-semibold text-xs px-5 py-2.5 rounded-lg transition-all">
+                    Concluir Análise
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- NOVO: Modal para Depósito/Saque da Poupança de Metas -->
+    <div id="savingsTxModal" class="fixed inset-0 bg-black/85 z-50 flex items-center justify-center p-4 hidden transition-all duration-300">
+        <div class="bg-[#111827] border border-gray-800 rounded-2xl w-full max-w-sm shadow-2xl overflow-hidden">
+            <div class="p-5 border-b border-gray-800 flex justify-between items-center bg-[#151b29]">
+                <h3 id="savings-tx-title" class="text-sm font-bold text-white flex items-center gap-2">
+                    <i class="fa-solid fa-piggy-bank text-pink-400"></i> Atualizar Poupança
+                </h3>
+                <button onclick="closeModal('savingsTxModal')" class="text-gray-400 hover:text-white transition-all">
+                    <i class="fa-solid fa-xmark text-lg"></i>
+                </button>
+            </div>
+            
+            <form id="savingsTxForm" onsubmit="executeSavingsTransaction(event)" class="p-5 space-y-4">
+                <input type="hidden" id="savings-target-key">
+                <input type="hidden" id="savings-action-type">
+                
+                <div>
+                    <label class="block text-xs font-semibold text-gray-400 uppercase mb-1.5" id="savings-tx-label">Valor (R$)</label>
+                    <input type="number" step="0.01" min="0.01" id="savings-tx-value" required placeholder="0.00" class="w-full bg-[#1e293b] border border-gray-700 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-pink-500 transition-all">
+                </div>
+
+                <div class="pt-2 flex justify-end gap-2">
+                    <button type="button" onclick="closeModal('savingsTxModal')" class="bg-gray-800 hover:bg-gray-700 text-gray-300 font-medium text-xs px-4 py-2.5 rounded-lg transition-all">Cancelar</button>
+                    <button type="submit" id="savings-tx-submit" class="bg-pink-600 hover:bg-pink-500 text-white font-semibold text-xs px-4 py-2.5 rounded-lg transition-all">Confirmar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal Customizado de Confirmação de Exclusão -->
+    <div id="confirmDeleteModal" class="fixed inset-0 bg-black/85 z-50 flex items-center justify-center p-4 hidden transition-all duration-300">
+        <div class="bg-[#111827] border border-gray-800 rounded-2xl w-full max-w-md shadow-2xl p-6 text-center">
+            <div class="w-16 h-16 bg-red-950/40 text-red-400 rounded-full flex items-center justify-center mx-auto mb-4 border border-red-500/30">
+                <i class="fa-solid fa-triangle-exclamation text-2xl"></i>
+            </div>
+            <h3 class="text-lg font-bold text-white mb-2" id="confirm-delete-title">Confirmar Exclusão</h3>
+            <p class="text-gray-400 text-sm mb-6" id="confirm-delete-msg">Você tem certeza que deseja deletar este registro? Isso não poderá ser desfeito.</p>
+            <div class="flex justify-center gap-3">
+                <button onclick="closeDeleteModal()" class="bg-gray-800 hover:bg-gray-700 text-gray-300 font-medium text-sm px-5 py-2.5 rounded-xl transition-all">Cancelar</button>
+                <button id="confirm-delete-btn" class="bg-red-600 hover:bg-red-500 text-white font-semibold text-sm px-5 py-2.5 rounded-xl transition-all">Excluir</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Notification Widget -->
+    <div id="toast" class="fixed bottom-5 right-5 z-50 transform translate-y-20 opacity-0 transition-all duration-300 bg-gray-900 border border-gray-800 rounded-xl p-4 flex items-center gap-3 shadow-2xl max-w-sm pointer-events-none">
+        <div id="toast-icon-bg" class="w-8 h-8 rounded-lg flex items-center justify-center text-sm"></div>
+        <div>
+            <h4 id="toast-title" class="font-bold text-white text-xs">Aviso</h4>
+            <p id="toast-msg" class="text-gray-400 text-[11px] mt-0.5">Notificação informativa...</p>
+        </div>
+    </div>
+
+    <script>
+        // Inicialização de Estados do Aplicativo
+        let expenses = [];
+        let extraIncomes = [];
+        let workLogs = [];
+        let hourlyRate = 50.00;
+        let activeCategoryFilter = 'Todas';
+        
+        // Poupança Metas (Casa & Viagem)
+        let savings = {
+            casa: { saved: 1500.00, target: 50000.00 },
+            viagem: { saved: 800.00, target: 10000.00 }
+        };
+        
+        let editingExpenseId = null;
+        let editingIncomeId = null;
+        let editingWorkLogId = null; // ID para edição de horas
+        let itemToDelete = null; // { type: 'expense' | 'income' | 'workLog', id: string }
+        let currentTab = 'tab-hours';
+
+        // Dados de Exemplo / Fallbacks Seguros (Categorias Simplificadas: Casa, Viagem, Poupança, Geral, Outros)
+        const DEFAULT_EXPENSES = [
+            {
+                id: "1",
+                description: "Prestação Mobiliário",
+                category: "Casa",
+                totalValue: 1200,
+                totalInstallments: 1,
+                installments: [
+                    { id: "1-1", num: 1, value: 1200, dueDate: getFormattedDateOffset(0), paid: true }
+                ]
+            },
+            {
+                id: "2",
+                description: "Hospedagem de Fim de Semana",
+                category: "Viagem",
+                totalValue: 350,
+                totalInstallments: 1,
+                installments: [
+                    { id: "2-1", num: 1, value: 350, dueDate: getFormattedDateOffset(5), paid: true }
+                ]
+            },
+            {
+                id: "3",
+                description: "Aporte Poupança Casa",
+                category: "Poupança",
+                totalValue: 500,
+                totalInstallments: 1,
+                installments: [
+                    { id: "3-1", num: 1, value: 500, dueDate: getFormattedDateOffset(10), paid: false }
+                ]
+            },
+            {
+                id: "4",
+                description: "Seguro de Viagem",
+                category: "Viagem",
+                totalValue: 850,
+                totalInstallments: 5,
+                installments: [
+                    { id: "4-1", num: 1, value: 170, dueDate: getFormattedDateOffset(14), paid: false },
+                    { id: "4-2", num: 2, value: 170, dueDate: getFormattedDateOffset(44), paid: false },
+                    { id: "4-3", num: 3, value: 170, dueDate: getFormattedDateOffset(74), paid: false },
+                    { id: "4-4", num: 4, value: 170, dueDate: getFormattedDateOffset(104), paid: false },
+                    { id: "4-5", num: 5, value: 170, dueDate: getFormattedDateOffset(134), paid: false }
+                ]
+            },
+            {
+                id: "5",
+                description: "Contas de Água e Luz",
+                category: "Casa",
+                totalValue: 120,
+                totalInstallments: 1,
+                installments: [
+                    { id: "5-1", num: 1, value: 120, dueDate: getFormattedDateOffset(7), paid: false }
+                ]
+            }
+        ];
+
+        const DEFAULT_INCOMES = [
+            {
+                id: "inc-1",
+                description: "Projeto Freelance Design",
+                source: "Agência Digital",
+                value: 400.00,
+                date: getFormattedDateOffset(2),
+                received: true
+            }
+        ];
+
+        const DEFAULT_WORK_LOGS = [
+            {
+                id: "wl-1",
+                date: getFormattedDateOffset(-4),
+                startTime: "18:00",
+                endTime: "22:00",
+                note: "Desenvolvimento Frontend",
+                hoursDecimal: 4.0,
+                rateAtTime: 50.00,
+                totalEarned: 200.00
+            },
+            {
+                id: "wl-2",
+                date: getFormattedDateOffset(0),
+                startTime: "08:00",
+                endTime: "12:00",
+                note: "Suporte Técnico",
+                hoursDecimal: 4.0,
+                rateAtTime: 50.00,
+                totalEarned: 200.00
+            }
+        ];
+
+        // Inicialização e Carregamento Local
+        window.onload = function() {
+            resetForms();
+
+            // Garantir teto dinâmico para parcelas pagas no formulário
+            document.getElementById('exp-installments').addEventListener('input', function(e) {
+                const maxVal = parseInt(e.target.value) || 1;
+                const paidCountInput = document.getElementById('exp-paid-count');
+                paidCountInput.max = maxVal;
+                if (parseInt(paidCountInput.value) > maxVal) {
+                    paidCountInput.value = maxVal;
+                }
+            });
+
+            loadFromLocalStorage();
+            renderAll();
+        };
+
+        function resetForms() {
+            const today = new Date().toISOString().split('T')[0];
+            document.getElementById('exp-first-date').value = today;
+            document.getElementById('inc-date').value = today;
+            document.getElementById('work-date').value = today;
+            document.getElementById('work-start').value = "08:00";
+            document.getElementById('work-end').value = "12:00";
+            document.getElementById('work-note').value = "";
+        }
+
+        function getFormattedDateOffset(daysOffset) {
+            const date = new Date();
+            date.setDate(date.getDate() + daysOffset);
+            return date.toISOString().split('T')[0];
+        }
+
+        function loadFromLocalStorage() {
+            const savedExpenses = localStorage.getItem('planilha_despesas_v3');
+            const savedIncomes = localStorage.getItem('planilha_ganhos_v3');
+            const savedWorkLogs = localStorage.getItem('planilha_horas_v3');
+            const savedHourlyRate = localStorage.getItem('planilha_hourly_rate_v3');
+            const savedSavings = localStorage.getItem('planilha_poupancas_v3');
+            
+            if (savedExpenses) {
+                expenses = JSON.parse(savedExpenses);
+            } else {
+                expenses = DEFAULT_EXPENSES;
+                localStorage.setItem('planilha_despesas_v3', JSON.stringify(expenses));
+            }
+
+            if (savedIncomes) {
+                extraIncomes = JSON.parse(savedIncomes);
+            } else {
+                extraIncomes = DEFAULT_INCOMES;
+                localStorage.setItem('planilha_ganhos_v3', JSON.stringify(extraIncomes));
+            }
+
+            if (savedWorkLogs) {
+                workLogs = JSON.parse(savedWorkLogs);
+            } else {
+                workLogs = DEFAULT_WORK_LOGS;
+                localStorage.setItem('planilha_horas_v3', JSON.stringify(workLogs));
+            }
+
+            if (savedHourlyRate) {
+                hourlyRate = parseFloat(savedHourlyRate);
+                document.getElementById('global-hourly-rate').value = hourlyRate.toFixed(2);
+            } else {
+                hourlyRate = 50.00;
+                localStorage.setItem('planilha_hourly_rate_v3', hourlyRate);
+            }
+
+            if (savedSavings) {
+                savings = JSON.parse(savedSavings);
+            } else {
+                localStorage.setItem('planilha_poupancas_v3', JSON.stringify(savings));
+            }
+        }
+
+        function saveToLocalStorage() {
+            localStorage.setItem('planilha_despesas_v3', JSON.stringify(expenses));
+            localStorage.setItem('planilha_ganhos_v3', JSON.stringify(extraIncomes));
+            localStorage.setItem('planilha_horas_v3', JSON.stringify(workLogs));
+            localStorage.setItem('planilha_hourly_rate_v3', hourlyRate);
+            localStorage.setItem('planilha_poupancas_v3', JSON.stringify(savings));
+        }
+
+        // Controle de Modais e Interface
+        function openModal(modalId) {
+            const modal = document.getElementById(modalId);
+            modal.classList.remove('hidden');
+            setTimeout(() => {
+                modal.classList.remove('opacity-0');
+            }, 50);
+        }
+
+        function closeModal(modalId) {
+            const modal = document.getElementById(modalId);
+            modal.classList.add('opacity-0');
+            setTimeout(() => {
+                modal.classList.add('hidden');
+            }, 300);
+        }
+
+        function openNewExpenseModal() {
+            editingExpenseId = null;
+            document.getElementById('expenseForm').reset();
+            resetForms();
+            setPaymentType('vista'); // Inicia por padrão no pagamento à vista
+            document.getElementById('expense-modal-title').innerHTML = '<i class="fa-solid fa-file-invoice text-indigo-400"></i> Adicionar Nova Despesa';
+            document.getElementById('expense-submit-btn').innerText = 'Salvar Gasto';
+            openModal('expenseModal');
+        }
+
+        function openNewIncomeModal() {
+            editingIncomeId = null;
+            document.getElementById('incomeForm').reset();
+            resetForms();
+            document.getElementById('income-modal-title').innerHTML = '<i class="fa-solid fa-money-bill-wave text-emerald-400"></i> Adicionar Ganho Avulso';
+            document.getElementById('income-submit-btn').innerText = 'Salvar Ganho';
+            openModal('incomeModal');
+        }
+
+        function openWorkLogModal() {
+            editingWorkLogId = null;
+            document.getElementById('workLogForm').reset();
+            resetForms();
+            document.getElementById('worklog-modal-title').innerHTML = '<i class="fa-solid fa-clock text-sky-400"></i> Registrar Horas de Trabalho';
+            document.getElementById('worklog-submit-btn').innerText = 'Salvar Registro';
+            openModal('workLogModal');
+        }
+
+        function openReportModal() {
+            renderReportData();
+            openModal('reportModal');
+        }
+
+        // Operações de Poupança (Casa & Viagem)
+        function openSavingsTxModal(goalKey, actionType) {
+            document.getElementById('savingsTxForm').reset();
+            document.getElementById('savings-target-key').value = goalKey;
+            document.getElementById('savings-action-type').value = actionType;
+            
+            const goalTitle = goalKey === 'casa' ? 'Poupança Casa' : 'Poupança Viagem';
+            const actionTitle = actionType === 'add' ? 'Guardar Dinheiro' : 'Retirar Dinheiro';
+            
+            document.getElementById('savings-tx-title').innerHTML = `<i class="fa-solid fa-piggy-bank text-pink-400"></i> ${goalTitle} - ${actionTitle}`;
+            document.getElementById('savings-tx-label').innerText = actionType === 'add' ? 'Valor a Guardar (R$)' : 'Valor a Retirar (R$)';
+            document.getElementById('savings-tx-submit').innerText = actionType === 'add' ? 'Guardar' : 'Retirar';
+            
+            openModal('savingsTxModal');
+        }
+
+        function executeSavingsTransaction(e) {
+            e.preventDefault();
+            const goalKey = document.getElementById('savings-target-key').value;
+            const actionType = document.getElementById('savings-action-type').value;
+            const value = parseFloat(document.getElementById('savings-tx-value').value);
+            
+            if (isNaN(value) || value <= 0) {
+                showToast("Erro", "Valor inválido informado.", "error");
+                return;
+            }
+
+            if (actionType === 'add') {
+                savings[goalKey].saved += value;
+                showToast("Poupança Atualizada", `R$ ${value.toFixed(2)} guardados com sucesso!`, "success");
+            } else {
+                if (savings[goalKey].saved < value) {
+                    showToast("Saldo Insuficiente", "Você não pode retirar um valor maior do que o guardado.", "error");
+                    return;
+                }
+                savings[goalKey].saved -= value;
+                showToast("Poupança Atualizada", `R$ ${value.toFixed(2)} retirados com sucesso!`, "success");
+            }
+
+            saveToLocalStorage();
+            renderSavingsWidget();
+            calculateStats();
+            closeModal('savingsTxModal');
+        }
+
+        function renderSavingsWidget() {
+            const formatBRL = (v) => new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(v);
+            
+            // Renderizar Casa
+            const casaPct = Math.min(100, Math.max(0, Math.round((savings.casa.saved / savings.casa.target) * 100)));
+            document.getElementById('savings-casa-percent').innerText = `${casaPct}%`;
+            document.getElementById('savings-casa-bar').style.width = `${casaPct}%`;
+            document.getElementById('savings-casa-current').innerText = formatBRL(savings.casa.saved);
+            document.getElementById('savings-casa-target').innerText = formatBRL(savings.casa.target);
+
+            // Renderizar Viagem
+            const viagemPct = Math.min(100, Math.max(0, Math.round((savings.viagem.saved / savings.viagem.target) * 100)));
+            document.getElementById('savings-viagem-percent').innerText = `${viagemPct}%`;
+            document.getElementById('savings-viagem-bar').style.width = `${viagemPct}%`;
+            document.getElementById('savings-viagem-current').innerText = formatBRL(savings.viagem.saved);
+            document.getElementById('savings-viagem-target').innerText = formatBRL(savings.viagem.target);
+        }
+
+        // Configuração do Tipo de Pagamento (À Vista vs Parcelado)
+        function setPaymentType(type) {
+            document.getElementById('exp-payment-type').value = type;
+            const btnVista = document.getElementById('pay-type-vista');
+            const btnParcelado = document.getElementById('pay-type-parcelado');
+            const installmentsContainer = document.getElementById('installments-fields-container');
+            const vistaContainer = document.getElementById('vista-fields-container');
+            
+            if (type === 'vista') {
+                btnVista.className = "py-2.5 rounded-xl text-sm font-semibold border transition-all bg-indigo-600/20 text-indigo-400 border-indigo-500/40";
+                btnParcelado.className = "py-2.5 rounded-xl text-sm font-semibold border border-gray-700 text-gray-400 hover:text-white transition-all";
+                installmentsContainer.classList.add('hidden');
+                vistaContainer.classList.remove('hidden');
+                document.getElementById('exp-installments').value = "1";
+                document.getElementById('exp-paid-count').value = "0";
+            } else {
+                btnVista.className = "py-2.5 rounded-xl text-sm font-semibold border border-gray-700 text-gray-400 hover:text-white transition-all";
+                btnParcelado.className = "py-2.5 rounded-xl text-sm font-semibold border transition-all bg-indigo-600/20 text-indigo-400 border-indigo-500/40";
+                installmentsContainer.classList.remove('hidden');
+                vistaContainer.classList.add('hidden');
+            }
+        }
+
+        function updateHourlyRateSetting() {
+            const val = parseFloat(document.getElementById('global-hourly-rate').value);
+            if (!isNaN(val) && val >= 0) {
+                hourlyRate = val;
+                saveToLocalStorage();
+                renderAll();
+                showToast("Sucesso", "O novo valor da sua hora de trabalho foi atualizado.", "success");
+            } else {
+                showToast("Erro", "Valor de hora inválido.", "error");
+            }
+        }
+
+        function switchTab(tabId) {
+            currentTab = tabId;
+            const btnHours = document.getElementById('btn-tab-hours');
+            const btnGains = document.getElementById('btn-tab-gains');
+            const cHours = document.getElementById('content-tab-hours');
+            const cGains = document.getElementById('content-tab-gains');
+
+            if (tabId === 'tab-hours') {
+                btnHours.className = "flex-1 py-3 text-center text-xs font-bold text-white border-b-2 border-sky-500 transition-all";
+                btnGains.className = "flex-1 py-3 text-center text-xs font-bold text-gray-400 border-b-2 border-transparent hover:text-white transition-all";
+                cHours.classList.remove('hidden');
+                cGains.classList.add('hidden');
+            } else {
+                btnHours.className = "flex-1 py-3 text-center text-xs font-bold text-gray-400 border-b-2 border-transparent hover:text-white transition-all";
+                btnGains.className = "flex-1 py-3 text-center text-xs font-bold text-white border-b-2 border-emerald-500 transition-all";
+                cHours.classList.add('hidden');
+                cGains.classList.remove('hidden');
+            }
+        }
+
+        function showToast(title, message, type = 'success') {
+            const toast = document.getElementById('toast');
+            const iconBg = document.getElementById('toast-icon-bg');
+            const tTitle = document.getElementById('toast-title');
+            const tMsg = document.getElementById('toast-msg');
+
+            tTitle.innerText = title;
+            tMsg.innerText = message;
+
+            if (type === 'success') {
+                iconBg.className = "w-8 h-8 rounded-lg flex items-center justify-center text-sm bg-emerald-950/50 text-emerald-400 border border-emerald-500/20";
+                iconBg.innerHTML = '<i class="fa-solid fa-circle-check"></i>';
+            } else if (type === 'error') {
+                iconBg.className = "w-8 h-8 rounded-lg flex items-center justify-center text-sm bg-red-950/50 text-red-400 border border-red-500/20";
+                iconBg.innerHTML = '<i class="fa-solid fa-circle-exclamation"></i>';
+            } else {
+                iconBg.className = "w-8 h-8 rounded-lg flex items-center justify-center text-sm bg-sky-950/50 text-sky-400 border border-sky-500/20";
+                iconBg.innerHTML = '<i class="fa-solid fa-clock"></i>';
+            }
+
+            toast.classList.remove('translate-y-20', 'opacity-0');
+            setTimeout(() => {
+                toast.classList.add('translate-y-20', 'opacity-0');
+            }, 3000);
+        }
+
+        // Cálculos e Dashboards
+        function calculateStats() {
+            let totalGainsAvulso = 0;
+            extraIncomes.forEach(inc => {
+                totalGainsAvulso += Number(inc.value);
+            });
+
+            let totalWorkEarned = 0;
+            let totalMinutes = 0;
+            workLogs.forEach(log => {
+                totalWorkEarned += Number(log.totalEarned);
+                totalMinutes += Math.round(log.hoursDecimal * 60);
+            });
+
+            const totalIncomes = totalGainsAvulso + totalWorkEarned;
+
+            let totalExpenses = 0;
+            let paidExpenses = 0;
+            expenses.forEach(exp => {
+                exp.installments.forEach(inst => {
+                    totalExpenses += Number(inst.value);
+                    if (inst.paid) {
+                        paidExpenses += Number(inst.value);
+                    }
+                });
+            });
+
+            const netBalance = totalIncomes - totalExpenses;
+            const formatBRL = (v) => new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(v);
+
+            document.getElementById('stat-income').innerText = formatBRL(totalIncomes);
+            document.getElementById('stat-income-details').innerText = `Horas: ${formatBRL(totalWorkEarned)} | Avulsos: ${formatBRL(totalGainsAvulso)}`;
+
+            document.getElementById('stat-expenses').innerText = formatBRL(totalExpenses);
+            document.getElementById('stat-expenses-paid').innerText = `${formatBRL(paidExpenses)} pagos até agora`;
+
+            const balanceCard = document.getElementById('stat-balance');
+            balanceCard.innerText = formatBRL(netBalance);
+            if (netBalance >= 0) {
+                balanceCard.className = "text-2xl font-bold text-emerald-400 mt-1";
+            } else {
+                balanceCard.className = "text-2xl font-bold text-rose-500 mt-1";
+            }
+
+            const h = Math.floor(totalMinutes / 60);
+            const m = totalMinutes % 60;
+            const formattedHoursStr = `${h}h ${m.toString().padStart(2, '0')}m`;
+            
+            document.getElementById('stat-total-hours').innerText = formattedHoursStr;
+            document.getElementById('stat-hourly-rate-badge').innerText = formatBRL(hourlyRate);
+
+            document.getElementById('sidebar-total-hours').innerText = formattedHoursStr;
+            document.getElementById('sidebar-total-earned').innerText = formatBRL(totalWorkEarned);
+        }
+
+        // Cadastro, Edição e Salvamento de Gasto
+        function saveExpense(e) {
+            e.preventDefault();
+
+            const paymentType = document.getElementById('exp-payment-type').value;
+            const description = document.getElementById('exp-desc').value.trim();
+            const category = document.getElementById('exp-category').value;
+            const totalValue = parseFloat(document.getElementById('exp-value').value);
+            const firstDateStr = document.getElementById('exp-first-date').value;
+
+            const totalInstallments = paymentType === 'vista' ? 1 : parseInt(document.getElementById('exp-installments').value) || 1;
+            const paidCount = paymentType === 'vista' 
+                ? (document.getElementById('exp-paid-vista').checked ? 1 : 0) 
+                : (parseInt(document.getElementById('exp-paid-count').value) || 0);
+
+            if (!description || isNaN(totalValue) || !firstDateStr) {
+                showToast("Erro no Lançamento", "Preencha corretamente os dados do formulário.", "error");
+                return;
+            }
+
+            const eachValue = Number((totalValue / totalInstallments).toFixed(2));
+
+            if (editingExpenseId) {
+                const index = expenses.findIndex(exp => exp.id === editingExpenseId);
+                if (index !== -1) {
+                    const original = expenses[index];
+                    
+                    if (original.totalValue === totalValue && 
+                        original.totalInstallments === totalInstallments && 
+                        original.installments[0]?.dueDate === firstDateStr) {
+                        
+                        original.description = description;
+                        original.category = category;
+                        
+                        for (let i = 0; i < original.installments.length; i++) {
+                            original.installments[i].paid = i < paidCount;
+                        }
+                    } else {
+                        const installmentsList = [];
+                        for (let i = 1; i <= totalInstallments; i++) {
+                            const dateObj = new Date(firstDateStr + "T00:00:00");
+                            dateObj.setMonth(dateObj.getMonth() + (i - 1));
+                            
+                            installmentsList.push({
+                                id: `${editingExpenseId}-${i}`,
+                                num: i,
+                                value: eachValue,
+                                dueDate: dateObj.toISOString().split('T')[0],
+                                paid: i <= paidCount
+                            });
+                        }
+                        original.description = description;
+                        original.category = category;
+                        original.totalValue = totalValue;
+                        original.totalInstallments = totalInstallments;
+                        original.installments = installmentsList;
+                    }
+                    showToast("Sucesso", `O gasto "${description}" foi atualizado com sucesso.`, "success");
+                }
+                editingExpenseId = null;
+            } else {
+                const newId = Date.now().toString();
+                const installmentsList = [];
+
+                for (let i = 1; i <= totalInstallments; i++) {
+                    const dateObj = new Date(firstDateStr + "T00:00:00");
+                    dateObj.setMonth(dateObj.getMonth() + (i - 1));
+                    
+                    installmentsList.push({
+                        id: `${newId}-${i}`,
+                        num: i,
+                        value: eachValue,
+                        dueDate: dateObj.toISOString().split('T')[0],
+                        paid: i <= paidCount
+                    });
+                }
+
+                const newExpense = {
+                    id: newId,
+                    description,
+                    category,
+                    totalValue,
+                    totalInstallments,
+                    installments: installmentsList
+                };
+
+                expenses.unshift(newExpense);
+                showToast("Despesa Salva", `"${description}" adicionada com sucesso.`, "success");
+            }
+
+            saveToLocalStorage();
+            renderAll();
+            closeModal('expenseModal');
+        }
+
+        function editExpense(id, event) {
+            if (event) event.stopPropagation();
+            const exp = expenses.find(e => e.id === id);
+            if (!exp) return;
+
+            editingExpenseId = id;
+            
+            document.getElementById('exp-desc').value = exp.description;
+            document.getElementById('exp-category').value = exp.category;
+            document.getElementById('exp-value').value = exp.totalValue;
+
+            const paidCount = exp.installments.filter(i => i.paid).length;
+
+            if (exp.totalInstallments === 1) {
+                setPaymentType('vista');
+                document.getElementById('exp-paid-vista').checked = exp.installments[0]?.paid || false;
+            } else {
+                setPaymentType('parcelado');
+                document.getElementById('exp-installments').value = exp.totalInstallments;
+                document.getElementById('exp-paid-count').value = paidCount;
+                document.getElementById('exp-paid-count').max = exp.totalInstallments;
+            }
+
+            if (exp.installments.length > 0) {
+                document.getElementById('exp-first-date').value = exp.installments[0].dueDate;
+            }
+
+            document.getElementById('expense-modal-title').innerHTML = '<i class="fa-solid fa-pen-to-square text-indigo-400"></i> Editar Despesa Cadastrada';
+            document.getElementById('expense-submit-btn').innerText = 'Salvar Alteração';
+            
+            openModal('expenseModal');
+        }
+
+        // Ganhos Extras e Registros de Horas (COM OPÇÃO DE EDIÇÃO!)
+        function saveIncome(e) {
+            e.preventDefault();
+
+            const description = document.getElementById('inc-desc').value.trim();
+            const source = document.getElementById('inc-source').value.trim() || 'Renda Extra';
+            const value = parseFloat(document.getElementById('inc-value').value);
+            const date = document.getElementById('inc-date').value;
+            const status = document.getElementById('inc-status').value;
+
+            if (!description || isNaN(value) || !date) {
+                showToast("Dados Incompletos", "Preencha todos os campos obrigatórios.", "error");
+                return;
+            }
+
+            if (editingIncomeId) {
+                const index = extraIncomes.findIndex(inc => inc.id === editingIncomeId);
+                if (index !== -1) {
+                    extraIncomes[index].description = description;
+                    extraIncomes[index].source = source;
+                    extraIncomes[index].value = value;
+                    extraIncomes[index].date = date;
+                    extraIncomes[index].received = status === 'received';
+                    showToast("Ganho Alterado", `"${description}" atualizado.`);
+                }
+                editingIncomeId = null;
+            } else {
+                const newIncome = {
+                    id: 'inc-' + Date.now().toString(),
+                    description,
+                    source,
+                    value,
+                    date,
+                    received: status === 'received'
+                };
+                extraIncomes.unshift(newIncome);
+                showToast("Receita Salva", `Ganho avulso "${description}" adicionado.`, "success");
+            }
+
+            saveToLocalStorage();
+            renderAll();
+            closeModal('incomeModal');
+        }
+
+        function editIncome(id, event) {
+            if (event) event.stopPropagation();
+            const inc = extraIncomes.find(i => i.id === id);
+            if (!inc) return;
+
+            editingIncomeId = id;
+            document.getElementById('inc-desc').value = inc.description;
+            document.getElementById('inc-source').value = inc.source;
+            document.getElementById('inc-value').value = inc.value;
+            document.getElementById('inc-date').value = inc.date;
+            document.getElementById('inc-status').value = inc.received ? 'received' : 'pending';
+
+            document.getElementById('income-modal-title').innerHTML = '<i class="fa-solid fa-pen-to-square text-emerald-400"></i> Editar Ganho Avulso';
+            document.getElementById('income-submit-btn').innerText = 'Salvar Alteração';
+
+            openModal('incomeModal');
+        }
+
+        function saveWorkLog(e) {
+            e.preventDefault();
+
+            const date = document.getElementById('work-date').value;
+            const startTime = document.getElementById('work-start').value;
+            const endTime = document.getElementById('work-end').value;
+            const note = document.getElementById('work-note').value.trim() || 'Hora Regular';
+
+            if (!date || !startTime || !endTime) {
+                showToast("Horários Inválidos", "Preencha os campos de horário corretamente.", "error");
+                return;
+            }
+
+            const [hStart, mStart] = startTime.split(':').map(Number);
+            const [hEnd, mEnd] = endTime.split(':').map(Number);
+
+            let diffMinutes = (hEnd * 60 + mEnd) - (hStart * 60 + mStart);
+            if (diffMinutes <= 0) {
+                diffMinutes += 24 * 60;
+            }
+
+            const hoursDecimal = diffMinutes / 60;
+            const calculatedEarned = Number((hoursDecimal * hourlyRate).toFixed(2));
+
+            if (editingWorkLogId) {
+                const index = workLogs.findIndex(w => w.id === editingWorkLogId);
+                if (index !== -1) {
+                    workLogs[index].date = date;
+                    workLogs[index].startTime = startTime;
+                    workLogs[index].endTime = endTime;
+                    workLogs[index].note = note;
+                    workLogs[index].hoursDecimal = hoursDecimal;
+                    workLogs[index].totalEarned = calculatedEarned;
+                    showToast("Registro Alterado", `Expediente atualizado com sucesso!`, "success");
+                }
+                editingWorkLogId = null;
+            } else {
+                const newLog = {
+                    id: 'wl-' + Date.now().toString(),
+                    date,
+                    startTime,
+                    endTime,
+                    note,
+                    hoursDecimal,
+                    rateAtTime: hourlyRate,
+                    totalEarned: calculatedEarned
+                };
+                workLogs.unshift(newLog);
+                showToast("Horas Salvas", `Adicionado expediente de ${hoursDecimal.toFixed(1)}h.`, "success");
+            }
+
+            saveToLocalStorage();
+            renderAll();
+            
+            // Atualizar o relatório se ele estiver aberto
+            const reportModal = document.getElementById('reportModal');
+            if (!reportModal.classList.contains('hidden')) {
+                renderReportData();
+            }
+            
+            closeModal('workLogModal');
+        }
+
+        // NOVO: Função para ativar a edição de horas
+        function editWorkLog(id, event) {
+            if (event) event.stopPropagation();
+            const log = workLogs.find(w => w.id === id);
+            if (!log) return;
+
+            editingWorkLogId = id;
+            document.getElementById('work-date').value = log.date;
+            document.getElementById('work-start').value = log.startTime;
+            document.getElementById('work-end').value = log.endTime;
+            document.getElementById('work-note').value = log.note;
+
+            document.getElementById('worklog-modal-title').innerHTML = '<i class="fa-solid fa-pen-to-square text-sky-400"></i> Editar Registro de Horas';
+            document.getElementById('worklog-submit-btn').innerText = 'Salvar Alteração';
+
+            openModal('workLogModal');
+        }
+
+        // Confirmação de Exclusão Segura
+        function confirmDeleteExpense(id, event) {
+            if (event) event.stopPropagation();
+            const exp = expenses.find(e => e.id === id);
+            if (!exp) return;
+
+            itemToDelete = { type: 'expense', id: id };
+            document.getElementById('confirm-delete-title').innerText = "Excluir Despesa";
+            document.getElementById('confirm-delete-msg').innerText = `Deseja realmente remover permanentemente a despesa "${exp.description}" e todo seu histórico de parcelas?`;
+            openModal('confirmDeleteModal');
+        }
+
+        function confirmDeleteIncome(id, event) {
+            if (event) event.stopPropagation();
+            const inc = extraIncomes.find(i => i.id === id);
+            if (!inc) return;
+
+            itemToDelete = { type: 'income', id: id };
+            document.getElementById('confirm-delete-title').innerText = "Excluir Ganho Avulso";
+            document.getElementById('confirm-delete-msg').innerText = `Deseja deletar o ganho extra de "${inc.description}"?`;
+            openModal('confirmDeleteModal');
+        }
+
+        function confirmDeleteWorkLog(id, event) {
+            if (event) event.stopPropagation();
+            const log = workLogs.find(w => w.id === id);
+            if (!log) return;
+
+            itemToDelete = { type: 'workLog', id: id };
+            document.getElementById('confirm-delete-title').innerText = "Excluir Registro de Ponto";
+            document.getElementById('confirm-delete-msg').innerText = `Deseja remover as horas trabalhadas em ${formatDate(log.date)} das ${log.startTime} às ${log.endTime}?`;
+            openModal('confirmDeleteModal');
+        }
+
+        function closeDeleteModal() {
+            closeModal('confirmDeleteModal');
+            itemToDelete = null;
+        }
+
+        document.getElementById('confirm-delete-btn').onclick = function() {
+            if (!itemToDelete) return;
+
+            if (itemToDelete.type === 'expense') {
+                expenses = expenses.filter(exp => exp.id !== itemToDelete.id);
+                showToast("Removido", "Despesa excluída com sucesso.", "error");
+            } else if (itemToDelete.type === 'income') {
+                extraIncomes = extraIncomes.filter(inc => inc.id !== itemToDelete.id);
+                showToast("Removido", "Ganho avulso excluído.", "error");
+            } else if (itemToDelete.type === 'workLog') {
+                workLogs = workLogs.filter(log => log.id !== itemToDelete.id);
+                showToast("Removido", "Registro de ponto excluído.", "error");
+            }
+
+            saveToLocalStorage();
+            renderAll();
+            
+            const reportModal = document.getElementById('reportModal');
+            if (!reportModal.classList.contains('hidden')) {
+                renderReportData();
+            }
+
+            closeDeleteModal();
+        };
+
+        // Gestão de Status de Parcelas Individuais
+        function toggleInstallmentStatus(expenseId, installmentId) {
+            const expIndex = expenses.findIndex(e => e.id === expenseId);
+            if (expIndex !== -1) {
+                const instIndex = expenses[expIndex].installments.findIndex(i => i.id === installmentId);
+                if (instIndex !== -1) {
+                    const inst = expenses[expIndex].installments[instIndex];
+                    inst.paid = !inst.paid;
+                    
+                    saveToLocalStorage();
+                    calculateStats();
+                    renderExpensesTable();
+                }
+            }
+        }
+
+        function updateInstallmentDate(expenseId, installmentId, newDate) {
+            if (!newDate) return;
+            const expIndex = expenses.findIndex(e => e.id === expenseId);
+            if (expIndex !== -1) {
+                const instIndex = expenses[expIndex].installments.findIndex(i => i.id === installmentId);
+                if (instIndex !== -1) {
+                    expenses[expIndex].installments[instIndex].dueDate = newDate;
+                    saveToLocalStorage();
+                    calculateStats();
+                    renderExpensesTable();
+                }
+            }
+        }
+
+        function toggleIncomeReceived(incomeId) {
+            const index = extraIncomes.findIndex(inc => inc.id === incomeId);
+            if (index !== -1) {
+                extraIncomes[index].received = !extraIncomes[index].received;
+                saveToLocalStorage();
+                renderAll();
+                showToast("Estado Atualizado", `Marcado como ${extraIncomes[index].received ? 'Recebido' : 'Pendente'}.`);
+            }
+        }
+
+        // Filtro por categoria no topo
+        function renderFilters() {
+            const categories = ['Todas', ...new Set(expenses.map(e => e.category))];
+            const filterContainer = document.getElementById('category-filters');
+            filterContainer.innerHTML = '';
+
+            categories.forEach(cat => {
+                const isActive = activeCategoryFilter === cat;
+                const btn = document.createElement('button');
+                btn.onclick = () => {
+                    activeCategoryFilter = cat;
+                    renderFilters();
+                    renderExpensesTable();
+                };
+                
+                btn.className = `px-3.5 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap border transition-all ${
+                    isActive 
+                        ? 'bg-indigo-600/20 text-indigo-400 border-indigo-500/40 font-bold' 
+                        : 'bg-gray-800 text-gray-400 border-gray-700/60 hover:text-white'
+                }`;
+                btn.innerText = cat;
+                filterContainer.appendChild(btn);
+            });
+        }
+
+        // Renderização da tabela de despesas (COLUNA CATEGORIA COMPLETAMENTE EXCLUÍDA)
+        function renderExpensesTable() {
+            const tableBody = document.getElementById('expense-table-body');
+            const emptyState = document.getElementById('expense-empty');
+            
+            const filteredExpenses = activeCategoryFilter === 'Todas' 
+                ? expenses 
+                : expenses.filter(e => e.category === activeCategoryFilter);
+
+            document.getElementById('expense-count').innerText = `${filteredExpenses.length} Cadastradas`;
+
+            if (filteredExpenses.length === 0) {
+                tableBody.innerHTML = '';
+                emptyState.classList.remove('hidden');
+                return;
+            }
+            emptyState.classList.add('hidden');
+
+            tableBody.innerHTML = '';
+            filteredExpenses.forEach(exp => {
+                const paidCount = exp.installments.filter(i => i.paid).length;
+                const totalCount = exp.installments.length;
+                
+                const nextPending = exp.installments.find(i => !i.paid) || exp.installments[exp.installments.length - 1];
+                const nextDueDate = nextPending ? formatDate(nextPending.dueDate) : 'Concluído';
+
+                const installmentVal = (exp.totalValue / totalCount);
+
+                let statusBadge = '';
+                if (paidCount === totalCount) {
+                    statusBadge = `<span class="bg-emerald-950/40 text-emerald-400 border border-emerald-500/20 px-3 py-1 rounded-full text-[11px] font-bold inline-flex items-center gap-1.5"><i class="fa-solid fa-circle text-[8px] text-emerald-500 animate-pulse"></i>Pago</span>`;
+                } else if (paidCount > 0) {
+                    statusBadge = `<span class="bg-amber-950/40 text-amber-400 border border-amber-500/20 px-3 py-1 rounded-full text-[11px] font-bold inline-flex items-center gap-1.5"><i class="fa-solid fa-circle text-[8px] text-amber-500 animate-pulse"></i>Parcial</span>`;
+                } else {
+                    statusBadge = `<span class="bg-rose-950/40 text-rose-400 border border-rose-500/20 px-3 py-1 rounded-full text-[11px] font-bold inline-flex items-center gap-1.5"><i class="fa-solid fa-circle text-[8px] text-rose-500 animate-pulse"></i>Pendente</span>`;
+                }
+
+                const row = document.createElement('tr');
+                row.id = `expense-row-${exp.id}`;
+                row.className = "hover:bg-[#151b29]/50 transition-colors border-b border-gray-800/60 cursor-pointer select-none";
+                row.setAttribute('onclick', `toggleInstallmentAccordion('${exp.id}')`);
+                
+                // Estruturação do valor para contas à vista e parceladas
+                const valueDescription = totalCount === 1 
+                    ? `<p class="text-sm text-gray-200 font-bold">R$ ${exp.totalValue.toFixed(2)}</p><p class="text-[10px] text-emerald-400 font-semibold mt-0.5">À Vista</p>`
+                    : `<p class="text-sm text-gray-200 font-bold">R$ ${exp.totalValue.toFixed(2)}</p><p class="text-[10px] text-indigo-400 font-semibold mt-0.5">${totalCount}x de R$ ${installmentVal.toFixed(2)}</p>`;
+
+                const parcelasPagasText = totalCount === 1
+                    ? (paidCount === 1 ? '1 de 1 (Pago)' : '0 de 1 (Pendente)')
+                    : `${paidCount} de ${totalCount}`;
+
+                row.innerHTML = `
+                    <td class="py-4 px-5">
+                        <div class="flex items-center gap-2">
+                            <span class="text-gray-400 text-xs"><i class="fa-solid fa-chevron-right text-[10px] transform transition-transform id-icon-${exp.id}"></i></span>
+                            <span class="font-bold text-white tracking-wide text-sm">${exp.description}</span>
+                        </div>
+                    </td>
+                    <td class="py-4 px-5 text-center text-xs text-gray-300 font-semibold">${parcelasPagasText}</td>
+                    <td class="py-4 px-5 text-right">${valueDescription}</td>
+                    <td class="py-4 px-5 text-center text-xs text-gray-400 font-medium">${nextDueDate}</td>
+                    <td class="py-4 px-5 text-center">${statusBadge}</td>
+                    <td class="py-4 px-5 text-center" onclick="event.stopPropagation();">
+                        <div class="flex items-center justify-center gap-1">
+                            <button onclick="editExpense('${exp.id}', event)" class="text-gray-400 hover:text-indigo-400 p-2 rounded-lg hover:bg-indigo-500/10 transition-all" title="Editar despesa">
+                                <i class="fa-solid fa-pen-to-square text-xs"></i>
+                            </button>
+                            <button onclick="confirmDeleteExpense('${exp.id}', event)" class="text-gray-400 hover:text-red-400 p-2 rounded-lg hover:bg-red-500/10 transition-all" title="Deletar despesa">
+                                <i class="fa-solid fa-trash text-xs"></i>
+                            </button>
+                        </div>
+                    </td>
+                `;
+                tableBody.appendChild(row);
+
+                // Detalhamento de Parcelas (Accordion Sanfonado)
+                const accordionRow = document.createElement('tr');
+                accordionRow.id = `accordion-row-${exp.id}`;
+                accordionRow.className = "hidden bg-[#0d121f]/80 border-b border-gray-800/80";
+                
+                let installmentsHtml = '';
+                exp.installments.forEach(inst => {
+                    const isPaid = inst.paid;
+                    installmentsHtml += `
+                        <div class="bg-[#182030] border border-gray-800 rounded-xl p-3.5 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 transition-all hover:border-gray-700">
+                            <div class="flex items-center gap-3">
+                                <div class="bg-gray-800 h-8 w-8 rounded-lg flex items-center justify-center text-xs font-bold text-gray-400 border border-gray-700">
+                                    ${inst.num}/${exp.totalInstallments}
+                                </div>
+                                <div>
+                                    <p class="text-[10px] font-semibold text-gray-500 uppercase">Vencimento</p>
+                                    <input type="date" value="${inst.dueDate}" onchange="updateInstallmentDate('${exp.id}', '${inst.id}', this.value)" class="bg-[#242f44] border border-gray-700/80 text-white rounded px-2 py-0.5 text-xs focus:outline-none focus:border-indigo-500 mt-0.5">
+                                </div>
+                            </div>
+                            
+                            <div class="flex items-center justify-between sm:justify-end gap-6 w-full sm:w-auto border-t sm:border-t-0 pt-2 sm:pt-0 border-gray-800">
+                                <span class="text-xs font-bold text-gray-300">R$ ${inst.value.toFixed(2)}</span>
+                                <button onclick="toggleInstallmentStatus('${exp.id}', '${inst.id}')" class="flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
+                                    isPaid 
+                                        ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' 
+                                        : 'bg-rose-500/10 text-rose-400 hover:bg-rose-500/20 border border-rose-500/20'
+                                }">
+                                    <i class="fa-solid ${isPaid ? 'fa-check' : 'fa-hourglass-half'}"></i>
+                                    ${isPaid ? 'Pago' : 'Pendente'}
+                                </button>
+                            </div>
+                        </div>
+                    `;
+                });
+
+                accordionRow.innerHTML = `
+                    <td colspan="6" class="p-5">
+                        <div class="space-y-3">
+                            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-gray-800 pb-3">
+                                <div>
+                                    <h4 class="font-bold text-white text-xs">Controle de Vencimentos</h4>
+                                    <p class="text-[10px] text-gray-400 font-medium">Controle as datas de vencimento e confirme os pagamentos das parcelas individualmente.</p>
+                                </div>
+                                <span class="text-[10px] text-indigo-400 font-semibold italic"><i class="fa-solid fa-arrows-spin mr-1"></i> Alterações salvas instantaneamente</span>
+                            </div>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-3 pt-2">
+                                ${installmentsHtml}
+                            </div>
+                        </div>
+                    </td>
+                `;
+                tableBody.appendChild(accordionRow);
+            });
+        }
+
+        function toggleInstallmentAccordion(expenseId) {
+            const accordion = document.getElementById(`accordion-row-${expenseId}`);
+            const icon = document.querySelector(`.id-icon-${expenseId}`);
+            
+            if (accordion.classList.contains('hidden')) {
+                accordion.classList.remove('hidden');
+                if(icon) icon.className = `fa-solid fa-chevron-down text-[10px] transform transition-transform id-icon-${expenseId}`;
+            } else {
+                accordion.classList.add('hidden');
+                if(icon) icon.className = `fa-solid fa-chevron-right text-[10px] transform transition-transform id-icon-${expenseId}`;
+            }
+        }
+
+        // Renderização da Folha de Ponto Lateral (COM BOTÃO DE EDITAR HORAS!)
+        function renderWorkLogs() {
+            const logList = document.getElementById('work-log-list');
+            const emptyState = document.getElementById('work-log-empty');
+
+            if (workLogs.length === 0) {
+                logList.innerHTML = '';
+                emptyState.classList.remove('hidden');
+                return;
+            }
+            emptyState.classList.add('hidden');
+
+            logList.innerHTML = '';
+            workLogs.forEach(log => {
+                const item = document.createElement('div');
+                item.className = "p-4 bg-[#182030] border border-gray-800 rounded-xl hover:border-sky-500/30 transition-all flex justify-between items-center group relative";
+                
+                const h = Math.floor(log.hoursDecimal);
+                const m = Math.round((log.hoursDecimal - h) * 60);
+                const durationStr = `${h}h${m > 0 ? ' ' + m + 'm' : ' 00m'}`;
+
+                item.innerHTML = `
+                    <div class="flex items-center gap-3.5 w-full">
+                        <div class="bg-sky-950/40 border border-sky-500/20 p-2.5 rounded-xl text-sky-400 flex items-center justify-center">
+                            <i class="fa-solid fa-business-time text-lg"></i>
+                        </div>
+                        <div class="flex-1">
+                            <div class="flex items-center justify-between">
+                                <h4 class="font-extrabold text-white text-xs tracking-wide uppercase">${log.note}</h4>
+                                <span class="text-[10px] bg-sky-500/10 text-sky-400 border border-sky-500/20 px-2 py-0.5 rounded-md font-bold">${durationStr}</span>
+                            </div>
+                            
+                            <div class="mt-2 flex items-center gap-2">
+                                <div class="px-2.5 py-1 rounded-lg time-badge text-sky-300 font-extrabold text-xs flex items-center gap-1.5">
+                                    <i class="fa-regular fa-clock text-[10px] text-sky-400"></i>
+                                    Entrada: <span class="text-white">${log.startTime}</span>
+                                </div>
+                                <span class="text-gray-600 text-xs">➔</span>
+                                <div class="px-2.5 py-1 rounded-lg time-badge text-emerald-400 font-extrabold text-xs flex items-center gap-1.5">
+                                    <i class="fa-regular fa-clock text-[10px] text-emerald-400"></i>
+                                    Saída: <span class="text-white">${log.endTime}</span>
+                                </div>
+                            </div>
+                            
+                            <p class="text-[10px] text-gray-500 mt-2 font-medium flex items-center gap-1">
+                                <i class="fa-solid fa-calendar-days text-[9px] text-gray-500 mr-0.5"></i>
+                                Dia Trabalhado: <span class="text-gray-300 font-semibold">${formatDate(log.date)}</span>
+                            </p>
+                        </div>
+                        
+                        <!-- BOTÕES DE EDITAR E EXCLUIR EXPLICITAMENTE ADICIONADOS E VISÍVEIS -->
+                        <div class="flex items-center gap-1 ml-2 border-l border-gray-800/80 pl-2">
+                            <button onclick="editWorkLog('${log.id}', event)" class="text-gray-400 hover:text-indigo-400 p-1.5 rounded-lg hover:bg-indigo-500/10 transition-all flex items-center justify-center" title="Editar este ponto">
+                                <i class="fa-solid fa-pen-to-square text-xs"></i>
+                            </button>
+                            <button onclick="confirmDeleteWorkLog('${log.id}', event)" class="text-red-400 hover:text-red-300 p-1.5 rounded-lg hover:bg-red-500/10 transition-all flex items-center justify-center" title="Remover registro de horas">
+                                <i class="fa-solid fa-trash text-xs"></i>
+                            </button>
+                        </div>
+                    </div>
+                `;
+                logList.appendChild(item);
+            });
+        }
+
+        // Renderização dos Ganhos Avulsos
+        function renderIncomesList() {
+            const incomeList = document.getElementById('income-list');
+            const emptyState = document.getElementById('income-empty');
+
+            let mergedEarnings = [...extraIncomes];
+            
+            workLogs.forEach(log => {
+                mergedEarnings.push({
+                    id: 'auto-wl-' + log.id,
+                    description: `Ponto: ${log.note} (${log.hoursDecimal.toFixed(1)}h)`,
+                    source: `Histórico de Horas (${formatDate(log.date)})`,
+                    value: log.totalEarned,
+                    date: log.date,
+                    received: true, 
+                    isAutoLog: true
+                });
+            });
+
+            mergedEarnings.sort((a, b) => b.date.localeCompare(a.date));
+
+            if (mergedEarnings.length === 0) {
+                incomeList.innerHTML = '';
+                emptyState.classList.remove('hidden');
+                return;
+            }
+            emptyState.classList.add('hidden');
+
+            incomeList.innerHTML = '';
+            mergedEarnings.forEach(inc => {
+                const item = document.createElement('div');
+                item.className = `p-3.5 border rounded-xl hover:border-emerald-500/30 transition-all flex justify-between items-center group ${
+                    inc.isAutoLog ? 'bg-sky-950/10 border-sky-500/10' : 'bg-[#182030] border-gray-800'
+                }`;
+                
+                const iconHtml = inc.isAutoLog 
+                    ? '<i class="fa-solid fa-clock-rotate-left text-sm"></i>' 
+                    : '<i class="fa-solid fa-money-bill-trend-up text-sm"></i>';
+                
+                const badgeColor = inc.isAutoLog ? 'bg-sky-500/10 text-sky-400 border-sky-500/20' : 'bg-gray-800 border-gray-700/60 text-gray-300';
+                
+                item.innerHTML = `
+                    <div class="flex items-center gap-3">
+                        <div class="p-2.5 rounded-xl ${
+                            inc.isAutoLog 
+                                ? 'bg-sky-950/40 border border-sky-500/20 text-sky-400' 
+                                : 'bg-emerald-950/40 border border-emerald-500/20 text-emerald-400'
+                        }">
+                            ${iconHtml}
+                        </div>
+                        <div>
+                            <h4 class="font-bold text-white text-xs">${inc.description}</h4>
+                            <p class="text-[10px] text-gray-500 mt-1 flex items-center gap-1.5">
+                                <span class="${badgeColor} border px-1.5 py-0.5 rounded text-[9px] font-medium">${inc.source}</span>
+                                <span>•</span>
+                                <span><i class="fa-regular fa-calendar-days text-[9px]"></i> ${formatDate(inc.date)}</span>
+                            </p>
+                        </div>
+                    </div>
+                    
+                    <div class="flex items-center gap-3">
+                        <div class="text-right">
+                            <p class="font-bold text-emerald-400 text-xs">R$ ${Number(inc.value).toFixed(2)}</p>
+                            ${inc.isAutoLog ? `
+                                <span class="text-[9px] text-sky-400 font-bold">Autocalculado</span>
+                            ` : `
+                                <button onclick="toggleIncomeReceived('${inc.id}')" class="text-[9px] font-semibold mt-0.5 transition-all flex items-center gap-1 ml-auto ${
+                                    inc.received ? 'text-emerald-500' : 'text-amber-500'
+                                }">
+                                    <i class="fa-solid ${inc.received ? 'fa-circle-check' : 'fa-circle-question'} text-[8px]"></i>
+                                    ${inc.received ? 'Recebido' : 'Pendente'}
+                                </button>
+                            `}
+                        </div>
+                        
+                        ${!inc.isAutoLog ? `
+                            <div class="flex items-center gap-1 border-l border-gray-800 pl-2">
+                                <button onclick="editIncome('${inc.id}', event)" class="text-gray-400 hover:text-indigo-400 p-1.5 rounded-lg hover:bg-indigo-500/10 transition-all" title="Editar ganho extra">
+                                    <i class="fa-solid fa-pen-to-square text-xs"></i>
+                                </button>
+                                <button onclick="confirmDeleteIncome('${inc.id}', event)" class="text-red-400 hover:text-red-300 p-1.5 rounded-lg hover:bg-red-500/10 transition-all" title="Remover ganho extra">
+                                    <i class="fa-solid fa-trash text-xs"></i>
+                                </button>
+                            </div>
+                        ` : ''}
+                    </div>
+                `;
+                incomeList.appendChild(item);
+            });
+        }
+
+        // Renderização do Relatório de Horas Avançado (OPÇÃO DE EDITAR ADICIONADA, VALOR GERADO REMOVIDO, HORAS SUPER ALINHADAS!)
+        function renderReportData() {
+            const tableBody = document.getElementById('report-table-body');
+            const emptyState = document.getElementById('report-empty-state');
+            const daysCountBadge = document.getElementById('rep-total-days');
+
+            daysCountBadge.innerText = `${workLogs.length} Dias Registrados`;
+
+            if (workLogs.length === 0) {
+                tableBody.innerHTML = '';
+                emptyState.classList.remove('hidden');
+                
+                document.getElementById('rep-stat-hours').innerText = '0h 00m';
+                document.getElementById('rep-stat-earned').innerText = 'R$ 0,00';
+                document.getElementById('rep-stat-avg').innerText = '0h 00m';
+                document.getElementById('rep-stat-rate').innerText = 'R$ 0,00';
+                return;
+            }
+            emptyState.classList.add('hidden');
+
+            let totalMinutes = 0;
+            let totalEarned = 0;
+
+            workLogs.forEach(log => {
+                totalMinutes += Math.round(log.hoursDecimal * 60);
+                totalEarned += Number(log.totalEarned);
+            });
+
+            const formatBRL = (v) => new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(v);
+            
+            const th = Math.floor(totalMinutes / 60);
+            const tm = totalMinutes % 60;
+            document.getElementById('rep-stat-hours').innerText = `${th}h ${tm.toString().padStart(2, '0')}m`;
+            document.getElementById('rep-stat-earned').innerText = formatBRL(totalEarned);
+
+            const avgMinutes = Math.round(totalMinutes / workLogs.length);
+            const avgh = Math.floor(avgMinutes / 60);
+            const avgm = avgMinutes % 60;
+            document.getElementById('rep-stat-avg').innerText = `${avgh}h ${avgm.toString().padStart(2, '0')}m`;
+            document.getElementById('rep-stat-rate').innerText = formatBRL(hourlyRate);
+
+            // Geração de Tabela Compacta (Sem coluna de valor gerado irrelevante e com opção de editar e excluir)
+            tableBody.innerHTML = '';
+            workLogs.forEach(log => {
+                const logh = Math.floor(log.hoursDecimal);
+                const logm = Math.round((log.hoursDecimal - logh) * 60);
+                const durationStr = `${logh}h${logm > 0 ? ' ' + logm + 'm' : ' 00m'}`;
+
+                const row = document.createElement('tr');
+                row.className = "hover:bg-gray-900/60 transition-colors";
+                row.innerHTML = `
+                    <td class="p-4 font-semibold text-gray-300 text-sm">
+                        <div>
+                            <span class="block">${formatDate(log.date)}</span>
+                            <span class="text-[10px] text-gray-500 italic block font-medium mt-0.5">${log.note}</span>
+                        </div>
+                    </td>
+                    <td class="p-4 text-center whitespace-nowrap">
+                        <div class="inline-flex items-center gap-2.5 px-3 py-1.5 bg-[#182030] border border-gray-800 rounded-xl text-xs font-bold text-gray-200">
+                            <span class="text-sky-400">Entrada: ${log.startTime}</span>
+                            <span class="text-gray-500 font-normal">➔</span>
+                            <span class="text-emerald-400">Saída: ${log.endTime}</span>
+                        </div>
+                    </td>
+                    <td class="p-4 text-center text-white font-bold text-sm">${durationStr}</td>
+                    <td class="p-4 text-center">
+                        <div class="flex items-center justify-center gap-2">
+                            <!-- Botão de Editar Horas Trabalhadas dentro do Relatório -->
+                            <button onclick="editWorkLog('${log.id}', event)" class="text-gray-400 hover:text-indigo-400 p-2 rounded hover:bg-indigo-500/15 transition-all" title="Editar este expediente">
+                                <i class="fa-solid fa-pen-to-square text-xs"></i>
+                            </button>
+                            <button onclick="confirmDeleteWorkLog('${log.id}', event)" class="text-red-400 hover:text-red-300 p-2 rounded hover:bg-red-500/15 transition-all" title="Excluir dia do expediente">
+                                <i class="fa-solid fa-trash text-xs"></i>
+                            </button>
+                        </div>
+                    </td>
+                `;
+                tableBody.appendChild(row);
+            });
+        }
+
+        // Funções Auxiliares de Formatação
+        function formatDate(dateStr) {
+            if (!dateStr) return '';
+            const parts = dateStr.split('-');
+            if (parts.length === 3) {
+                return `${parts[2]}/${parts[1]}/${parts[0]}`;
+            }
+            return dateStr;
+        }
+
+        function renderAll() {
+            calculateStats();
+            renderFilters();
+            renderExpensesTable();
+            renderWorkLogs();
+            renderIncomesList();
+            renderSavingsWidget();
+        }
+
+        // Exportação simplificada para backup em JSON
+        function exportData() {
+            const dataToExport = {
+                expenses,
+                extraIncomes,
+                workLogs,
+                hourlyRate,
+                savings
+            };
+            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(dataToExport, null, 2));
+            const dlAnchorElem = document.createElement('a');
+            dlAnchorElem.setAttribute("href", dataStr);
+            dlAnchorElem.setAttribute("download", `Backup_Financeiro_${new Date().toISOString().split('T')[0]}.json`);
+            dlAnchorElem.click();
+            showToast("Backup Realizado", "Seus dados foram exportados em formato JSON.");
+        }
+    </script>
+</body>
+</html>
